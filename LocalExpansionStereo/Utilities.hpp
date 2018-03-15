@@ -23,7 +23,7 @@ namespace cvutils
 			int w, h;
 			char buf[256];
 			FILE *f;
-			fopen_s(&f, filename.c_str(), "rb");
+			f = fopen(filename.c_str(), "rb");
 			if (f == NULL)
 			{
 				//wprintf(L"PFM file absent: %s\n\n", filename.c_str());
@@ -35,9 +35,9 @@ namespace cvutils
 			if (strcmp(buf, "Pf") == 0) channel = 1;
 			else if (strcmp(buf, "PF") == 0) channel = 3;
 			else {
-				printf(buf);
-				printf("Not a 1/3 channel PFM file.\n");
-				return cv::Mat();
+                          printf("%s",buf);
+                          printf("Not a 1/3 channel PFM file.\n");
+                          return cv::Mat();
 			}
 			fscanf(f, "%d %d\n", &w, &h);
 			double scale = 1.0;
@@ -87,7 +87,7 @@ namespace cvutils
 			int height = image.rows;
 
 			FILE *stream;
-			fopen_s(&stream, filename.c_str(), "wb");
+			stream = fopen(filename.c_str(), "wb");
 			if (stream == NULL)
 			{
 				printf("PFM file absent: %s\n\n", filename.c_str());
@@ -148,16 +148,16 @@ namespace cvutils
 			}
 			if (out.empty()) {
 				int s = 0;
-				ofs.write((const char*)(&s), sizeof(__int32));
+				ofs.write((const char*)(&s), sizeof(int));
 				return true;
 			}
-			__int32 rows = out.rows;
-			__int32 cols = out.cols;
-			__int32 type = out.type();
+			int rows = out.rows;
+			int cols = out.cols;
+			int type = out.type();
 
-			ofs.write((const char*)(&rows), sizeof(__int32));
-			ofs.write((const char*)(&cols), sizeof(__int32));
-			ofs.write((const char*)(&type), sizeof(__int32));
+			ofs.write((const char*)(&rows), sizeof(int));
+			ofs.write((const char*)(&cols), sizeof(int));
+			ofs.write((const char*)(&type), sizeof(int));
 			ofs.write((const char*)(out.data), out.elemSize() * out.total());
 
 			return true;
@@ -178,13 +178,13 @@ namespace cvutils
 
 			if (readHeader)
 			{
-				__int32 rows, cols, type;
-				ifs.read((char*)(&rows), sizeof(__int32));
+				int rows, cols, type;
+				ifs.read((char*)(&rows), sizeof(int));
 				if (rows == 0) {
 					return true;
 				}
-				ifs.read((char*)(&cols), sizeof(__int32));
-				ifs.read((char*)(&type), sizeof(__int32));
+				ifs.read((char*)(&cols), sizeof(int));
+				ifs.read((char*)(&type), sizeof(int));
 
 				in_mat.release();
 				in_mat.create(rows, cols, type);

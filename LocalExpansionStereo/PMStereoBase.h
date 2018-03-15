@@ -34,7 +34,7 @@ public:
 		width(imL.cols),
 		height(imL.rows),
 		nNodes(imL.cols * imL.rows),
-		stereoEnergy(std::make_unique<NaiveStereoEnergy>(imL, imR, params, maxDisparity, minDisparity, maxVDisparity)),
+                stereoEnergy(std::unique_ptr<NaiveStereoEnergy>(new NaiveStereoEnergy(imL, imR, params, maxDisparity, minDisparity, maxVDisparity))),
 		imageDomain(0, 0, imL.cols, imL.rows),
 		M(1),
 		evaluator(nullptr),
@@ -84,7 +84,7 @@ public:
 
 protected:
 
-	void viewConsistencyCheck(cv::Mat& check0 = cv::Mat(), cv::Mat& check1 = cv::Mat())
+	void viewConsistencyCheck(cv::Mat& check0, cv::Mat& check1)
 	{
 		cv::Mat disp[2] = { stereoEnergy->computeDisparities(currentLabeling_[0]), stereoEnergy->computeDisparities(currentLabeling_[1]) };
 		cv::Mat fail[2];

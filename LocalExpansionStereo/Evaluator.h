@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iomanip>
 #include "TimeStamper.h"
 #include <opencv2/opencv.hpp>
 #include "StereoEnergy.h"
@@ -160,10 +161,12 @@ public:
 		}
 
 		if (saveProgress && save){
-			cv::imwrite(saveDir + cv::format("%s%dD%02d.png", header, mode, index), disparityMapVis * 255);
+                  std::ostringstream index_stream;
+                  index_stream << std::setfill('0') << std::setw(2) << index;
+                  cv::imwrite(saveDir + header + std::to_string(mode) + "D" + index_stream.str() + ".png", disparityMapVis * 255);
 			//cv::imwrite(saveDir + cv::format("%s%dV%02d.png", header, mode, index), vdispMapVis * 255);
-			cv::imwrite(saveDir + cv::format("%s%dN%02d.png", header, mode, index), normalMapVis * 255);
-			cv::imwrite(saveDir + cv::format("%s%dE%02d.png", header, mode, index), errorMapVis);
+                  cv::imwrite(saveDir + header + std::to_string(mode) + "N" + index_stream.str() + ".png", normalMapVis * 255);
+                  cv::imwrite(saveDir + header + std::to_string(mode) + "E" + index_stream.str() + ".png", errorMapVis);
 
 			if (fp_output != nullptr && mode == 0)
 			{

@@ -9,7 +9,7 @@
 #include "ArgsParser.h"
 #include "CostVolumeEnergy.h"
 #include "Utilities.hpp"
-#include <direct.h>
+#include <sys/stat.h>
 
 struct Options
 {
@@ -286,15 +286,15 @@ void MidV2(const std::string inputDir, const std::string outputDir, const Option
 	param.lambda = options.smooth_weight;
 
 	{
-		_mkdir((outputDir + "debug").c_str());
+          mkdir((outputDir + "debug").c_str(), 0777);
 
-		Evaluator *eval = new Evaluator(dispGT, nonocc, 255.0f / (maxdisp), "result", outputDir + "debug\\");
+		Evaluator *eval = new Evaluator(dispGT, nonocc, 255.0f / (maxdisp), "result", outputDir + "debug/");
 		eval->setPrecision(calib.gt_prec);
 		eval->showProgress = false;
 		eval->setErrorThreshold(errorThresh);
 
 		FastGCStereo stereo(imL, imR, param, maxdisp, 0, vdisp);
-		stereo.saveDir = outputDir + "debug\\";
+		stereo.saveDir = outputDir + "debug/";
 		stereo.setEvaluator(eval);
 
 		IProposer* prop1 = new ExpansionProposer(1);
@@ -307,7 +307,7 @@ void MidV2(const std::string inputDir, const std::string outputDir, const Option
 
 		cv::Mat labeling, rawdisp;
 		if (options.doDual)
-			stereo.run(options.iterations, { 0, 1 }, options.pmIterations, labeling, rawdisp);
+                  stereo.run(options.iterations, { 0, 1 }, options.pmIterations, labeling, rawdisp);
 		else
 			stereo.run(options.iterations, { 0 }, options.pmIterations, labeling, rawdisp);
 
@@ -375,16 +375,16 @@ void MidV3(const std::string inputDir, const std::string outputDir, const Option
 
 
 	{
-		_mkdir((outputDir + "debug").c_str());
+          mkdir((outputDir + "debug").c_str(), 0777);
 
-		Evaluator *eval = new Evaluator(dispGT, nonocc, 255.0f / (maxdisp), "result", outputDir + "debug\\");
+		Evaluator *eval = new Evaluator(dispGT, nonocc, 255.0f / (maxdisp), "result", outputDir + "debug/");
 		eval->setPrecision(-1);
 		eval->showProgress = false;
 		eval->setErrorThreshold(errorThresh);
 
 		FastGCStereo stereo(imL, imR, param, maxdisp);
-		stereo.setStereoEnergyCPU(std::make_unique<CostVolumeEnergy>(imL, imR, volL, volR, param, maxdisp));
-		stereo.saveDir = outputDir + "debug\\";
+		stereo.setStereoEnergyCPU(std::unique_ptr<CostVolumeEnergy>(new CostVolumeEnergy(imL, imR, volL, volR, param, maxdisp)));
+		stereo.saveDir = outputDir + "debug/";
 		stereo.setEvaluator(eval);
 
 		int w = imL.cols;
@@ -453,7 +453,7 @@ int main(int argc, const char** args)
 		omp_set_num_threads(options.threadNum);
 
 	if (options.outputDir.length())
-		_mkdir((options.outputDir).c_str());
+          mkdir((options.outputDir).c_str(), 0777);
 
 	printf("\n\n");
 

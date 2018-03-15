@@ -226,18 +226,18 @@ public:
 	{
 		cv::Point pt = ps + neighbors[neighborId];
 		return smoothnessCoeff[mode][neighborId].at<float>(ps + cv::Point(M, M))
-			* std::min(fabs(ls.GetZ(ps) - lt.GetZ(ps)) + fabs(ls.GetZ(pt) - lt.GetZ(pt)), params.th_smooth) * params.lambda;
+                  * std::min(fabs(ls.GetZ(ps) - lt.GetZ(ps)) + fabs(ls.GetZ(pt) - lt.GetZ(pt)), (double)params.th_smooth) * params.lambda;
 	}
 
 	float computeSmoothnessTerm(const Plane& ls, const Plane& lt, cv::Point ps, cv::Point pt, int mode = 0) const
 	{
 		return std::max(computePatchWeight(ps, pt, mode), params.epsilon)
-			* std::min(fabs(ls.GetZ(ps) - lt.GetZ(ps)) + fabs(ls.GetZ(pt) - lt.GetZ(pt)), params.th_smooth) * params.lambda;
+			* std::min(fabs(ls.GetZ(ps) - lt.GetZ(ps)) + fabs(ls.GetZ(pt) - lt.GetZ(pt)), (double)params.th_smooth) * params.lambda;
 	}
 
 	float computeSmoothnessTermWithoutConst(const Plane& ls, const Plane& lt, cv::Point ps, cv::Point pt) const
 	{
-		return std::min(fabs(ls.GetZ(ps) - lt.GetZ(ps)) + fabs(ls.GetZ(pt) - lt.GetZ(pt)), params.th_smooth);
+		return std::min(fabs(ls.GetZ(ps) - lt.GetZ(ps)) + fabs(ls.GetZ(pt) - lt.GetZ(pt)), (double)params.th_smooth);
 	}
 
 	float computeSmoothnessTermConst(cv::Point ps, cv::Point pt, int mode = 0) const
@@ -622,8 +622,8 @@ public:
 		//cv::Ptr<cv::ximgproc::GuidedFilter> cvfilter;
 	};
 	
-	virtual void ComputeUnaryPotentialWithoutCheck(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable = Reusable(), int mode = 0) const {};
-	virtual void ComputeUnaryPotential(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusabl = Reusable(), int mode = 0) const {};
+	virtual void ComputeUnaryPotentialWithoutCheck(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable, int mode = 0) const {};
+	virtual void ComputeUnaryPotential(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable, int mode = 0) const {};
 };
 
 class NaiveStereoEnergy : public StereoEnergy
@@ -631,8 +631,8 @@ class NaiveStereoEnergy : public StereoEnergy
 protected:
 	std::unique_ptr<IJointFilter> filter[2];
 	cv::Mat ExI[2];
-	float thresh_color;
-	float thresh_gradient;
+	double thresh_color;
+	double thresh_gradient;
 
 public:
 	NaiveStereoEnergy(const cv::Mat imL, const cv::Mat imR, Parameters params, float MAX_DISPARITY, float MIN_DISPARITY = 0, float MAX_VDISPARITY = 0)
@@ -665,19 +665,19 @@ public:
 
 		if (params.filterName == "BF")
 		{
-			filter[0] = std::make_unique<BilateralFilter>(imL, params.windR, params.filter_param1);
-			filter[1] = std::make_unique<BilateralFilter>(imR, params.windR, params.filter_param1);
+                  filter[0].reset(new BilateralFilter(imL, params.windR, params.filter_param1));
+                  filter[1].reset(new BilateralFilter(imR, params.windR, params.filter_param1));
 		}
 		else if (params.filterName == "GF")
 		{
 			// Running time slightly improves by changing double to float (but results also slightly change).
-			filter[0] = std::make_unique<FastGuidedImageFilter<double>>(imL, params.windR / 2, params.filter_param1, 1.0 / 255);
-			filter[1] = std::make_unique<FastGuidedImageFilter<double>>(imR, params.windR / 2, params.filter_param1, 1.0 / 255);
+                  filter[0].reset(new FastGuidedImageFilter<double>(imL, params.windR / 2, params.filter_param1, 1.0 / 255));
+                  filter[1].reset(new FastGuidedImageFilter<double>(imR, params.windR / 2, params.filter_param1, 1.0 / 255));
 		}
 		else if (params.filterName == "GFfloat")
 		{
-			filter[0] = std::make_unique<FastGuidedImageFilter<float>>(imL, params.windR / 2, params.filter_param1, 1.0 / 255);
-			filter[1] = std::make_unique<FastGuidedImageFilter<float>>(imR, params.windR / 2, params.filter_param1, 1.0 / 255);
+                  filter[0].reset(new FastGuidedImageFilter<float>(imL, params.windR / 2, params.filter_param1, 1.0 / 255));
+                  filter[1].reset(new FastGuidedImageFilter<float>(imR, params.windR / 2, params.filter_param1, 1.0 / 255));
 		}
 		else //if (params.filterName == "")
 		{
@@ -691,7 +691,7 @@ public:
 	}
 
 
-	void ComputeUnaryPotentialWithoutCheck(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable = Reusable(), int mode = 0) const override
+	void ComputeUnaryPotentialWithoutCheck(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable, int mode = 0) const override
 	{
 		if (reusable.pIL.empty())
 		{
@@ -753,7 +753,7 @@ public:
 			rawCosts(subrect).copyTo(costs(subrect));
 	}
 
-	void ComputeUnaryPotential(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable = Reusable(), int mode = 0) const override
+	void ComputeUnaryPotential(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable, int mode = 0) const override
 	{
 		ComputeUnaryPotentialWithoutCheck(filterRect, targetRect, costs, plane, reusable, mode);
 

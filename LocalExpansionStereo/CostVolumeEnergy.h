@@ -22,18 +22,18 @@ public:
 
 		if (params.filterName == "BL")
 		{
-			filter[0] = std::make_unique<BilateralFilter>(imL, params.windR, params.filter_param1);
-			filter[1] = std::make_unique<BilateralFilter>(imR, params.windR, params.filter_param1);
+                  filter[0].reset(new BilateralFilter(imL, params.windR, params.filter_param1));
+                  filter[1].reset(new BilateralFilter(imR, params.windR, params.filter_param1));
 		}
 		else if (params.filterName == "GF")
 		{
-			filter[0] = std::make_unique<FastGuidedImageFilter<double>>(imL, params.windR / 2, params.filter_param1, 1.0 / 255);
-			filter[1] = std::make_unique<FastGuidedImageFilter<double>>(imR, params.windR / 2, params.filter_param1, 1.0 / 255);
+                  filter[0].reset(new FastGuidedImageFilter<double>(imL, params.windR / 2, params.filter_param1, 1.0 / 255));
+                  filter[1].reset(new FastGuidedImageFilter<double>(imR, params.windR / 2, params.filter_param1, 1.0 / 255));
 		}
 		else if (params.filterName == "GFfloat")
 		{
-			filter[0] = std::make_unique<FastGuidedImageFilter<float>>(imL, params.windR / 2, params.filter_param1, 1.0 / 255);
-			filter[1] = std::make_unique<FastGuidedImageFilter<float>>(imR, params.windR / 2, params.filter_param1, 1.0 / 255);
+                  filter[0].reset(new FastGuidedImageFilter<float>(imL, params.windR / 2, params.filter_param1, 1.0 / 255));
+                  filter[1].reset(new FastGuidedImageFilter<float>(imR, params.windR / 2, params.filter_param1, 1.0 / 255));
 		}
 		else //if (params.filterName == "")
 		{
@@ -52,7 +52,7 @@ public:
 	}
 
 
-	void ComputeUnaryPotentialWithoutCheck(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable = Reusable(), int mode = 0) const override
+	void ComputeUnaryPotentialWithoutCheck(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable, int mode = 0) const override
 	{
 		if (reusable.pIL.empty())
 		{
@@ -77,7 +77,7 @@ public:
 				float C;
 				if (d < MIN_DISPARITY) C = vol[mode].at<float>(0, y, x);
 				else if (d >= MAX_DISPARITY) C = vol[mode].at<float>(D - 1, y, x);
-				else if (isnan<float>(d) || isinf<float>(d)) C = COST_FOR_INVALID;
+				else if (std::isnan(d) || std::isinf(d)) C = COST_FOR_INVALID;
 				else
 				{
 					int d0 = int(d) + D0;
@@ -109,7 +109,7 @@ public:
 					C = vol[mode].at<float>(0, y, x);
 				else if (d >= D)
 					C = vol[mode].at<float>(D - 1, y, x);
-				else if (isnan<float>(d_base) || isinf<float>(d_base))
+				else if (std::isnan(d_base) || std::isinf(d_base))
 					C = COST_FOR_INVALID;
 				else 
 					C = vol[mode].at<float>(d, y, x);
@@ -139,7 +139,7 @@ public:
 					C = vol[mode].at<float>(0, y, x);
 				else if (d2 >= D)
 					C = vol[mode].at<float>(D - 1, y, x);
-				else if (isnan<float>(d) || isinf<float>(d))
+				else if (std::isnan(d) || std::isinf(d))
 					C = COST_FOR_INVALID;
 				else
 				{
@@ -173,7 +173,7 @@ public:
 			reusable.pIL(subrect).copyTo(costs(subrect));
 	}
 
-	void ComputeUnaryPotential(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable = Reusable(), int mode = 0) const override
+	void ComputeUnaryPotential(const cv::Rect& filterRect, const cv::Rect& targetRect, const cv::Mat& costs, const Plane& plane, Reusable& reusable, int mode = 0) const override
 	{
 		ComputeUnaryPotentialWithoutCheck(filterRect, targetRect, costs, plane, reusable, mode);
 
